@@ -198,7 +198,7 @@ void generateRandomWaypoints()
   mt19937 gen(rd());
   uniform_real_distribution<double> dist(0.0, 6.0);  // Assuming the environment dimensions are 6m x 6m
 
-  ofstream outfile("../visits_domain/waypoint.txt", ios::app);
+  ofstream outfile("../visits_domain/waypoint.txt");
   if (!outfile.is_open()) {
     cerr << "Unable to open file for writing." << endl;
     return;
@@ -206,10 +206,19 @@ void generateRandomWaypoints()
 
   vector<tuple<double, double, double>> forbiddenCoordinates = { {0, 0, 0}, {-2.5, 2.5, 0}, {2.5, 2.5, 0}, {-2.5, -2.5, 0}, {2.5, -2.5, 0}, {3, 0, 0} };  // Specify the forbidden coordinates here
 
+  // set the default waypoints (the ones that are forbidden)
+  outfile << "wp0" << " [" << "0" << "," << "0" << "," << "0]";                 // The zero waypoint is the starting position of the robot       
+  outfile << endl << "wp1" << " [" << "-2.5" << "," << "2.5" << "," << "0]";    // The first waypoint is the first group table
+  outfile << endl << "wp2" << " [" << "2.5" << "," << "2.5" << "," << "0]";     // The second waypoint is the second group table
+  outfile << endl << "wp3" << " [" << "-2.5" << "," << "-2.5" << "," << "0]";   // The third waypoint is the third group table
+  outfile << endl << "wp4" << " [" << "2.5" << "," << "-2.5" << "," << "0]";    // The fourth waypoint is the fourth group table
+  outfile << endl << "wp5" << " [" << "3" << "," << "0" << "," << "0]";         // The fifth waypoint is the delivery table
+
   for (int i = 6; i < 30; ++i) {
     string waypoint_name = "wp" + to_string(i);
-    double x, y, theta;
+    double x, y/*, theta*/;
 
+    // Generate random coordinates with only 2 decimal places
     do {
       x = roundDecimal(dist(gen), 2);
       y = roundDecimal(dist(gen), 2);
