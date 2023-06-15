@@ -26,7 +26,7 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
-
+#include <random>
 #include "armadillo"
 #include <initializer_list>
 
@@ -35,7 +35,7 @@ using namespace arma;
 
 
 
-    //map <string, vector<double> > region_mapping;
+map <string, vector<double> > region_mapping;
 
 extern "C" ExternalSolver* create_object(){
   return new VisitSolver();
@@ -177,9 +177,40 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
        double cost = 2;//random1;
        return cost;
      }
+    void generateRandomWaypoints(string waypoint_file) {
+
+      
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_real_distribution<double> dist(0.0, 6.0);  // Assuming the environment dimensions are 6m x 6m
+
+    ofstream outfile(waypoint_file);
+    if (!outfile.is_open()) {
+      std::cerr << "Unable to open file for writing." << endl;
+      return;
+    }
+
+    for (int i = 0; i < 24; ++i) {
+      string waypoint_name = "wp" + to_string(i + 1);
+      double x = dist(gen);
+      double y = dist(gen);
+      
+
+      // Write waypoint to file
+      outfile << waypoint_name << " [" << x << "," << y << "]" << endl;
+      
+    }
+
+    outfile.close();
+    std::cout << "Waypoints have been written to 'waypoints.txt'." << std::endl;
+}
+
+
 
      void VisitSolver::parseWaypoint(string waypoint_file){
-
+      
+      generateRandomWaypoints(waypoint_file); // generate random waypoints and write to file
        int curr, next;
        string line;
        double pose1, pose2, pose3;
