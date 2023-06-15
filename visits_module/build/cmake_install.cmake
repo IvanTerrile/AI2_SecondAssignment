@@ -1,4 +1,4 @@
-# Install script for directory: /mnt/c/Users/miryr/OneDrive/Documenti/GitHub/AI2_SecondAssignment/visits_module/src
+# Install script for directory: /mnt/c/Users/terri/GitHubDesktop/AI2_SecondAssignment/visits_module/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/mnt/c/Users/miryr/OneDrive/Documenti/GitHub/AI2_SecondAssignment/visits_module/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/mnt/c/Users/terri/GitHubDesktop/AI2_SecondAssignment/visits_module/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

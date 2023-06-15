@@ -1,4 +1,4 @@
-/mnt/c/Users/miryr/OneDrive/Documenti/GitHub/AI2_SecondAssignment/visits_module/build/CMakeFiles/Visits.dir
-/mnt/c/Users/miryr/OneDrive/Documenti/GitHub/AI2_SecondAssignment/visits_module/build/CMakeFiles/VisitMain.dir
-/mnt/c/Users/miryr/OneDrive/Documenti/GitHub/AI2_SecondAssignment/visits_module/build/CMakeFiles/edit_cache.dir
-/mnt/c/Users/miryr/OneDrive/Documenti/GitHub/AI2_SecondAssignment/visits_module/build/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/terri/GitHubDesktop/AI2_SecondAssignment/visits_module/build/CMakeFiles/Visits.dir
+/mnt/c/Users/terri/GitHubDesktop/AI2_SecondAssignment/visits_module/build/CMakeFiles/VisitMain.dir
+/mnt/c/Users/terri/GitHubDesktop/AI2_SecondAssignment/visits_module/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/terri/GitHubDesktop/AI2_SecondAssignment/visits_module/build/CMakeFiles/rebuild_cache.dir

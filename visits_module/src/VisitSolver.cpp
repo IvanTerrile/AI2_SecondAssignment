@@ -177,40 +177,56 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
        double cost = 2;//random1;
        return cost;
      }
-    void generateRandomWaypoints(string waypoint_file) {
 
-      
-
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_real_distribution<double> dist(0.0, 6.0);  // Assuming the environment dimensions are 6m x 6m
-
-    ofstream outfile(waypoint_file);
-    if (!outfile.is_open()) {
-      std::cerr << "Unable to open file for writing." << endl;
-      return;
+bool checkForbiddenCoordinates(double x, double y, /*double theta,*/ const vector<tuple<double, double, double>>& forbiddenCoordinates) {
+  for (const auto& coord : forbiddenCoordinates) {
+    if (x == get<0>(coord) && y == get<1>(coord) /*&& theta == get<2>(coord)*/) {
+      return true;  // The coordinates are forbidden
     }
-
-    for (int i = 0; i < 24; ++i) {
-      string waypoint_name = "wp" + to_string(i + 1);
-      double x = dist(gen);
-      double y = dist(gen);
-      
-
-      // Write waypoint to file
-      outfile << waypoint_name << " [" << x << "," << y << "]" << endl;
-      
-    }
-
-    outfile.close();
-    std::cout << "Waypoints have been written to 'waypoints.txt'." << std::endl;
+  }
+  return false;  // The coordinates are allowed
 }
 
+double roundDecimal(double value, int decimalPlaces) {
+  double multiplier = pow(10.0, decimalPlaces);
+  return round(value * multiplier) / multiplier;
+}
 
+void generateRandomWaypoints()
+{
+  random_device rd;
+  mt19937 gen(rd());
+  uniform_real_distribution<double> dist(0.0, 6.0);  // Assuming the environment dimensions are 6m x 6m
+
+  ofstream outfile("../visits_domain/waypoint.txt", ios::app);
+  if (!outfile.is_open()) {
+    cerr << "Unable to open file for writing." << endl;
+    return;
+  }
+
+  vector<tuple<double, double, double>> forbiddenCoordinates = { {0, 0, 0}, {-2.5, 2.5, 0}, {2.5, 2.5, 0}, {-2.5, -2.5, 0}, {2.5, -2.5, 0}, {3, 0, 0} };  // Specify the forbidden coordinates here
+
+  for (int i = 6; i < 30; ++i) {
+    string waypoint_name = "wp" + to_string(i);
+    double x, y, theta;
+
+    do {
+      x = roundDecimal(dist(gen), 2);
+      y = roundDecimal(dist(gen), 2);
+      //theta = roundDecimal(dist(gen), 2);
+    } while (checkForbiddenCoordinates(x, y, /*theta,*/ forbiddenCoordinates));  // Check if the generated coordinates are forbidden
+
+    // Write waypoint to file
+    outfile << endl << waypoint_name << " [" << x << "," << y << "," << "0]";
+  }
+
+  outfile.close();
+  cout << "Waypoints have been written to 'waypoints.txt'." << endl;
+}
 
      void VisitSolver::parseWaypoint(string waypoint_file){
       
-      generateRandomWaypoints(waypoint_file); // generate random waypoints and write to file
+      generateRandomWaypoints(); // generate random waypoints and write to file
        int curr, next;
        string line;
        double pose1, pose2, pose3;

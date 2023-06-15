@@ -1,7 +1,7 @@
 CMakeFiles/Visits.dir/ExternalSolver.cpp.o: \
- /mnt/c/Users/miryr/OneDrive/Documenti/GitHub/AI2_SecondAssignment/visits_module/src/ExternalSolver.cpp \
+ /mnt/c/Users/terri/GitHubDesktop/AI2_SecondAssignment/visits_module/src/ExternalSolver.cpp \
  /usr/include/stdc-predef.h \
- /mnt/c/Users/miryr/OneDrive/Documenti/GitHub/AI2_SecondAssignment/visits_module/src/ExternalSolver.h \
+ /mnt/c/Users/terri/GitHubDesktop/AI2_SecondAssignment/visits_module/src/ExternalSolver.h \
  /usr/include/c++/11/iostream \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
