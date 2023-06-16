@@ -196,7 +196,7 @@ void generateRandomWaypoints()
 {
   random_device rd;
   mt19937 gen(rd());
-  uniform_real_distribution<double> dist(0.0, 6.0);  // Assuming the environment dimensions are 6m x 6m
+  uniform_real_distribution<double> dist(-3.0, 3.0);  // Assuming the environment dimensions are 6m x 6m
 
   ofstream outfile("../visits_domain/waypoint.txt");
   if (!outfile.is_open()) {
@@ -223,7 +223,7 @@ void generateRandomWaypoints()
       x = roundDecimal(dist(gen), 2);
       y = roundDecimal(dist(gen), 2);
       //theta = roundDecimal(dist(gen), 2);
-    } while (checkForbiddenCoordinates(x, y, /*theta,*/ forbiddenCoordinates));  // Check if the generated coordinates are forbidden
+    } while (x >= 2.0 || y >= 2.0 || x <= -2.0 || y <= -2.0 || checkForbiddenCoordinates(x, y, /*theta,*/ forbiddenCoordinates));  // Check if the generated coordinates are forbidden
 
     // Write waypoint to file
     outfile << endl << waypoint_name << " [" << x << "," << y << "," << "0]";
