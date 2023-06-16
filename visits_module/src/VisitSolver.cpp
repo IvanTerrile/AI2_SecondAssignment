@@ -33,9 +33,10 @@
 using namespace std;
 using namespace arma;
 
-
-
 map <string, vector<double> > region_mapping;
+
+double matrix_distances[30][30];
+int k = 4;
 
 extern "C" ExternalSolver* create_object(){
   return new VisitSolver();
@@ -178,8 +179,8 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
        return cost;
      }
 
-bool checkForbiddenCoordinates(double x, double y, /*double theta,*/ const vector<tuple<double, double, double>>& forbiddenCoordinates) {
-  for (const auto& coord : forbiddenCoordinates) {
+bool checkForbiddenWaypoint(double x, double y, /*double theta,*/ const vector<tuple<double, double, double>>& forbiddenWaypoint) {
+  for (const auto& coord : forbiddenWaypoint) {
     if (x == get<0>(coord) && y == get<1>(coord) /*&& theta == get<2>(coord)*/) {
       return true;  // The coordinates are forbidden
     }
@@ -192,6 +193,109 @@ double roundDecimal(double value, int decimalPlaces) {
   return round(value * multiplier) / multiplier;
 }
 
+// struct Waypoint {
+//     double x;
+//     double y;
+//     // double theta;
+//     vector<int> connectedWaypoints;
+// };
+
+double computeDistance(tuple<double, double, double> wp1, tuple<double, double, double> wp2) {
+    double dx = get<0>(wp2) - get<0>(wp1);
+    double dy = get<1>(wp2) - get<1>(wp1);
+    //double dtheta = wp2.z - wp1.z;
+    return sqrt(dx * dx + dy * dy /*+ dtheta * dtheta*/);
+}
+
+void findSmallestThree(int arr[], int size) {
+    int min1 = std::numeric_limits<int>::max();
+    int min2 = std::numeric_limits<int>::max();
+    int min3 = std::numeric_limits<int>::max();
+
+    for (int i = 0; i < size; ++i) {
+        if (arr[i] < min1) {
+            min3 = min2;
+            min2 = min1;
+            min1 = arr[i];
+        } else if (arr[i] < min2) {
+            min3 = min2;
+            min2 = arr[i];
+        } else if (arr[i] < min3) {
+            min3 = arr[i];
+        }
+    }
+
+    std::cout << "I tre valori più piccoli sono: " << min1 << ", " << min2 << ", " << min3 << std::endl;
+}
+
+void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoints) {
+    bool flag = false;
+    ofstream outfile("../visits_domain/connections.txt");
+    if (!outfile.is_open()) {
+      cerr << "Unable to open connections.txt for writing." << endl;
+      return;
+    }
+
+    int numWaypoints = randomWaypoints.size();
+
+    for(int i = 0; i < numWaypoints; i++){
+      for (int j = 0; j < numWaypoints; j++){
+        matrix_distances[i][j] = computeDistance(randomWaypoints[i], randomWaypoints[j]);
+      } 
+    }
+
+    double min1 = 0.0;
+    double min2 = 0.0;
+    double min3 = 0.0;   
+
+    for(int i = 0; i < numWaypoints; i++){
+      outfile << "Waypoint " << i << " is connected to: ";
+      if (matrix_distances[i][0] != 0.0){
+        min1 = matrix_distances[i][0];
+        min2 = matrix_distances[i][0];
+        min3 = matrix_distances[i][0];
+      }
+      else{
+        min1 = matrix_distances[i][1];
+        min2 = matrix_distances[i][1];
+        min3 = matrix_distances[i][1];
+      }
+      for (int j = 0; j < numWaypoints; j++){
+        if (i != j) {
+          if (matrix_distances[i][j] < min1) {
+              min3 = min2;
+              min2 = min1;
+              min1 = matrix_distances[i][j];
+          } else if (matrix_distances[i][j] < min2) {
+              min3 = min2;
+              min2 = matrix_distances[i][j];
+          } else if (matrix_distances[i][j] < min3) {
+              min3 = matrix_distances[i][j];
+          }
+        }
+      }
+      cout << "I tre valori più piccoli sono: " << min1 << ", " << min2 << ", " << min3 << endl;
+      for (int k = 0; k < numWaypoints; k++){
+        if (matrix_distances[i][k] != min1 && matrix_distances[i][k] != min2 && matrix_distances[i][k] != min3) {
+          matrix_distances[i][k] = 0.0;
+        }
+        else{
+          outfile << k << " ";
+        }
+      }
+      outfile << endl;
+    }
+
+    // Print the matrix
+    for(int i = 0; i < numWaypoints; i++){
+      cout << i << ": ";
+      for (int j = 0; j < numWaypoints; j++){
+        cout << matrix_distances[i][j] << " ";
+      }
+      cout << endl;
+    }
+}
+
 void generateRandomWaypoints()
 {
   random_device rd;
@@ -200,11 +304,12 @@ void generateRandomWaypoints()
 
   ofstream outfile("../visits_domain/waypoint.txt");
   if (!outfile.is_open()) {
-    cerr << "Unable to open file for writing." << endl;
+    cerr << "Unable to open waypoint.txt for writing." << endl;
     return;
   }
 
-  vector<tuple<double, double, double>> forbiddenCoordinates = { {0, 0, 0}, {-2.5, 2.5, 0}, {2.5, 2.5, 0}, {-2.5, -2.5, 0}, {2.5, -2.5, 0}, {3, 0, 0} };  // Specify the forbidden coordinates here
+  vector<tuple<double, double, double>> forbiddenWaypoint = { {0, 0, 0}, {3, 0, 0} };  // Specify the forbidden coordinates here
+  vector<tuple<double, double, double>> randomWaypoint(30, make_tuple(0.0, 0.0, 0.0));
 
   // set the default waypoints (the ones that are forbidden)
   outfile << "wp0" << " [" << "0" << "," << "0" << "," << "0]";                 // The zero waypoint is the starting position of the robot       
@@ -214,6 +319,15 @@ void generateRandomWaypoints()
   outfile << endl << "wp4" << " [" << "2.5" << "," << "-2.5" << "," << "0]";    // The fourth waypoint is the fourth group table
   outfile << endl << "wp5" << " [" << "3" << "," << "0" << "," << "0]";         // The fifth waypoint is the delivery table
 
+  // Insert the forbidden waypoints into the vector of forbidden waypoints
+  randomWaypoint[0] = make_tuple(0.0, 0.0, 0.0);
+  randomWaypoint[1] = make_tuple(-2.5, 2.5, 0.0);
+  randomWaypoint[2] = make_tuple(2.5, 2.5, 0.0);
+  randomWaypoint[3] = make_tuple(-2.5, -2.5, 0.0);
+  randomWaypoint[4] = make_tuple(2.5, -2.5, 0.0);
+  randomWaypoint[5] = make_tuple(3.0, 0.0, 0.0);
+
+  // Generate random waypoints
   for (int i = 6; i < 30; ++i) {
     string waypoint_name = "wp" + to_string(i);
     double x, y/*, theta*/;
@@ -223,11 +337,18 @@ void generateRandomWaypoints()
       x = roundDecimal(dist(gen), 2);
       y = roundDecimal(dist(gen), 2);
       //theta = roundDecimal(dist(gen), 2);
-    } while (x >= 2.0 || y >= 2.0 || x <= -2.0 || y <= -2.0 || checkForbiddenCoordinates(x, y, /*theta,*/ forbiddenCoordinates));  // Check if the generated coordinates are forbidden
+
+      // Add all the way points to the forbidden coordinates
+      randomWaypoint[i] = make_tuple(x, y, /*theta*/0); // Add the waypoint to the vector of waypoints
+
+    } while ((x >= 2.0 && y >= 2.0) || (x >= 2 && y <= -2) || (x <= -2.0 && y <= -2.0) 
+              || (x <= -2 && y >= 2) || checkForbiddenWaypoint(x, y, /*theta,*/ forbiddenWaypoint));  // Check if the generated coordinates are forbidden
 
     // Write waypoint to file
     outfile << endl << waypoint_name << " [" << x << "," << y << "," << "0]";
   }
+
+  connectWaypoints(randomWaypoint);
 
   outfile.close();
   cout << "Waypoints have been written to 'waypoints.txt'." << endl;
@@ -293,10 +414,3 @@ void generateRandomWaypoints()
 
   //void VisitSolver::distance_euc( string from, string to){
   //} 
-
-
-
-
-
-
-
