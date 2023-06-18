@@ -36,7 +36,8 @@ using namespace arma;
 map <string, vector<double> > region_mapping;
 
 double matrix_distances[30][30];
-int k = 4;
+double matrix_connections[30][30] = {0.0};
+int k = 3;
 
 extern "C" ExternalSolver* create_object(){
   return new VisitSolver();
@@ -193,13 +194,6 @@ double roundDecimal(double value, int decimalPlaces) {
   return round(value * multiplier) / multiplier;
 }
 
-// struct Waypoint {
-//     double x;
-//     double y;
-//     // double theta;
-//     vector<int> connectedWaypoints;
-// };
-
 double computeDistance(tuple<double, double, double> wp1, tuple<double, double, double> wp2) {
     double dx = get<0>(wp2) - get<0>(wp1);
     double dy = get<1>(wp2) - get<1>(wp1);
@@ -207,25 +201,26 @@ double computeDistance(tuple<double, double, double> wp1, tuple<double, double, 
     return sqrt(dx * dx + dy * dy /*+ dtheta * dtheta*/);
 }
 
-void findSmallestThree(int arr[], int size) {
-    int min1 = std::numeric_limits<int>::max();
-    int min2 = std::numeric_limits<int>::max();
-    int min3 = std::numeric_limits<int>::max();
-
-    for (int i = 0; i < size; ++i) {
-        if (arr[i] < min1) {
-            min3 = min2;
-            min2 = min1;
-            min1 = arr[i];
-        } else if (arr[i] < min2) {
-            min3 = min2;
-            min2 = arr[i];
-        } else if (arr[i] < min3) {
-            min3 = arr[i];
-        }
+void findMin(double row[], int i) {
+  
+    int index =0;
+    double min = row[index];
+    if (row[index] == 0.0) {
+      index++;
+      min = row[index];
     }
+    int minIndex = -1;
 
-    std::cout << "I tre valori più piccoli sono: " << min1 << ", " << min2 << ", " << min3 << std::endl;
+    for (int i = 0; i < 30; ++i) {
+      if(row[i] != 0.0){
+        if (row[i] <= min) {
+            min = row[i];
+            minIndex = i;
+        }
+      }
+    }
+    row[minIndex] = 0.0;
+    matrix_connections[i][minIndex] = min;
 }
 
 void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoints) {
@@ -242,57 +237,38 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
       for (int j = 0; j < numWaypoints; j++){
         matrix_distances[i][j] = computeDistance(randomWaypoints[i], randomWaypoints[j]);
       } 
-    }
-
-    double min1 = 0.0;
-    double min2 = 0.0;
-    double min3 = 0.0;   
-
-    for(int i = 0; i < numWaypoints; i++){
-      outfile << "Waypoint " << i << " is connected to: ";
-      if (matrix_distances[i][0] != 0.0){
-        min1 = matrix_distances[i][0];
-        min2 = matrix_distances[i][0];
-        min3 = matrix_distances[i][0];
-      }
-      else{
-        min1 = matrix_distances[i][1];
-        min2 = matrix_distances[i][1];
-        min3 = matrix_distances[i][1];
-      }
-      for (int j = 0; j < numWaypoints; j++){
-        if (i != j) {
-          if (matrix_distances[i][j] < min1) {
-              min3 = min2;
-              min2 = min1;
-              min1 = matrix_distances[i][j];
-          } else if (matrix_distances[i][j] < min2) {
-              min3 = min2;
-              min2 = matrix_distances[i][j];
-          } else if (matrix_distances[i][j] < min3) {
-              min3 = matrix_distances[i][j];
-          }
-        }
-      }
-      cout << "I tre valori più piccoli sono: " << min1 << ", " << min2 << ", " << min3 << endl;
-      for (int k = 0; k < numWaypoints; k++){
-        if (matrix_distances[i][k] != min1 && matrix_distances[i][k] != min2 && matrix_distances[i][k] != min3) {
-          matrix_distances[i][k] = 0.0;
-        }
-        else{
-          outfile << k << " ";
-        }
-      }
-      outfile << endl;
-    }
-
-    // Print the matrix
-    for(int i = 0; i < numWaypoints; i++){
+      // Print the matrix in the terminal
       cout << i << ": ";
       for (int j = 0; j < numWaypoints; j++){
         cout << matrix_distances[i][j] << " ";
       }
       cout << endl;
+    }
+
+    for(int i = 0; i < numWaypoints; i++){
+      for (int j=0;j<k;j++){
+      findMin(matrix_distances[i], i);
+      }
+    }
+
+    // Print the matrix in the terminal
+    for(int i = 0; i < numWaypoints; i++){
+      cout << i << ": ";
+      for (int j = 0; j < numWaypoints; j++){
+        cout << matrix_connections[i][j] << " ";
+      }
+      cout << endl;
+    }
+
+    // Print the matrix in the file
+    for(int i = 0; i < numWaypoints; i++){
+      outfile << "Waypoint " << i << " is connected to: ";
+      for (int j = 0; j < numWaypoints; j++){
+        if (matrix_connections[i][j] != 0.0) {
+          outfile << j << " ";
+        }
+      }
+      outfile << endl;
     }
 }
 
