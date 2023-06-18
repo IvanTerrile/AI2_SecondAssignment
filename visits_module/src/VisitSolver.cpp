@@ -180,6 +180,48 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
        return cost;
      }
 
+// Struttura per rappresentare un arco nel grafo
+struct Edge {
+    int source;
+    int destination;
+
+    Edge(int src, int dest) : source(src), destination(dest) {}
+};
+
+// Funzione per generare un grafo non pesato, aciclico e non orientato
+vector<Edge> generateGraph(int numNodes, int maxConnections) {
+    vector<Edge> graph;
+    srand(time(NULL));
+
+    vector<int> nodes(numNodes);
+    for (int i = 0; i < numNodes; i++) {
+        nodes[i] = i;
+    }
+
+    random_shuffle(nodes.begin(), nodes.end());
+
+    for (int i = 1; i < numNodes; i++) {
+        random_device rd;
+        mt19937 gen(rd());
+        uniform_int_distribution<int> dist(1, 3);
+
+        int numConnections = dist(gen); //rand() % 3 + 1;
+        int connections = 0;
+
+        for (int j = 0; j < i && connections < numConnections; j++) {
+            if (rand() % 2 == 0) {
+                graph.push_back(Edge(nodes[i], nodes[j]));
+                graph.push_back(Edge(nodes[j], nodes[i])); // Aggiungi l'arco simmetrico
+                connections++;
+            }
+        }
+    }
+
+    return graph;
+}
+
+
+
 bool checkForbiddenWaypoint(double x, double y, /*double theta,*/ const vector<tuple<double, double, double>>& forbiddenWaypoint) {
   for (const auto& coord : forbiddenWaypoint) {
     if (x == get<0>(coord) && y == get<1>(coord) /*&& theta == get<2>(coord)*/) {
@@ -224,7 +266,9 @@ void findMin(double row[], int i) {
 }
 
 void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoints) {
-    bool flag = false;
+    int numNodes = 30; // Numero di nodi nel grafo
+    int maxConnections = 3; // Massime connessioni per nodo
+    
     ofstream outfile("../visits_domain/connections.txt");
     if (!outfile.is_open()) {
       cerr << "Unable to open connections.txt for writing." << endl;
@@ -238,11 +282,11 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
         matrix_distances[i][j] = computeDistance(randomWaypoints[i], randomWaypoints[j]);
       } 
       // Print the matrix in the terminal
-      cout << i << ": ";
-      for (int j = 0; j < numWaypoints; j++){
-        cout << matrix_distances[i][j] << " ";
-      }
-      cout << endl;
+      // cout << i << ": ";
+      // for (int j = 0; j < numWaypoints; j++){
+      //   cout << matrix_distances[i][j] << " ";
+      // }
+      // cout << endl;
     }
 
     for(int i = 0; i < numWaypoints; i++){
@@ -251,14 +295,22 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
       }
     }
 
-    // Print the matrix in the terminal
     for(int i = 0; i < numWaypoints; i++){
-      cout << i << ": ";
       for (int j = 0; j < numWaypoints; j++){
-        cout << matrix_connections[i][j] << " ";
+        if (matrix_connections[i][j] != 0.0) {
+          outfile << i << " " << j << " " << matrix_connections[i][j] << endl;
+        }
       }
-      cout << endl;
     }
+
+    // Print the matrix in the terminal
+    // for(int i = 0; i < numWaypoints; i++){
+    //   cout << i << ": ";
+    //   for (int j = 0; j < numWaypoints; j++){
+    //     cout << matrix_connections[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
 
     // Print the matrix in the file
     for(int i = 0; i < numWaypoints; i++){
@@ -270,6 +322,12 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
       }
       outfile << endl;
     }
+    vector<Edge> graph = generateGraph(numNodes, maxConnections);
+
+    for (const Edge& edge : graph) {
+        cout << edge.source << " -- " << edge.destination << endl;
+    }
+
 }
 
 void generateRandomWaypoints()
