@@ -37,6 +37,7 @@ map <string, vector<double> > region_mapping;
 
 double matrix_distances[30][30];
 double matrix_connections[30][30] = {0.0};
+double adiajency_matrix[30][30] = {0};
 int k = 3;
 
 extern "C" ExternalSolver* create_object(){
@@ -181,44 +182,45 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
      }
 
 // Struttura per rappresentare un arco nel grafo
-struct Edge {
-    int source;
-    int destination;
+// struct Edge {
+//     int src;
+//     int dest;
 
-    Edge(int src, int dest) : source(src), destination(dest) {}
-};
+//     Edge(int source, int destination) : src(source), dest(destination) {}
+// };
 
-// Funzione per generare un grafo non pesato, aciclico e non orientato
-vector<Edge> generateGraph(int numNodes, int maxConnections) {
-    vector<Edge> graph;
-    srand(time(NULL));
+// vector<Edge> generateGraph(int numNodes, int maxConnections) {
+//     vector<Edge> graph;
 
-    vector<int> nodes(numNodes);
-    for (int i = 0; i < numNodes; i++) {
-        nodes[i] = i;
-    }
+//     vector<int> nodes(numNodes);
+//     vector<int> connections(numNodes);
+//     for (int i = 0; i < numNodes; i++) {
+//         nodes[i] = i;
+//         connections[i] = 0;
+//     }
 
-    random_shuffle(nodes.begin(), nodes.end());
+//     for (int i = 0; i < numNodes; i++) {
+//         int connectionsAdded = 0;
 
-    for (int i = 1; i < numNodes; i++) {
-        random_device rd;
-        mt19937 gen(rd());
-        uniform_int_distribution<int> dist(1, 3);
+//         while (connectionsAdded < maxConnections && connections[i] < maxConnections) {
+//             int randomNumber = rand() % numNodes;
 
-        int numConnections = dist(gen); //rand() % 3 + 1;
-        int connections = 0;
+//             if (connections[randomNumber] < maxConnections && randomNumber != i) {
+//                 graph.push_back(Edge(nodes[i], nodes[randomNumber]));
+//                 graph.push_back(Edge(nodes[randomNumber], nodes[i])); // Aggiungi l'arco simmetrico
+//                 connections[i]++;
+//                 connections[randomNumber]++;
+//                 connectionsAdded++;
+//                 adiajency_matrix[i][randomNumber] = 1;
+//                 adiajency_matrix[randomNumber][i] = 1;
+//             }
+//         }
+//     }
 
-        for (int j = 0; j < i && connections < numConnections; j++) {
-            if (rand() % 2 == 0) {
-                graph.push_back(Edge(nodes[i], nodes[j]));
-                graph.push_back(Edge(nodes[j], nodes[i])); // Aggiungi l'arco simmetrico
-                connections++;
-            }
-        }
-    }
+//     return graph;
+// }
 
-    return graph;
-}
+
 
 
 
@@ -322,10 +324,14 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
       }
       outfile << endl;
     }
-    vector<Edge> graph = generateGraph(numNodes, maxConnections);
+    //vector<Edge> graph = generateGraph(numNodes, maxConnections);
 
-    for (const Edge& edge : graph) {
-        cout << edge.source << " -- " << edge.destination << endl;
+    
+    for (int i =0 ;i<30;i++){
+      for (int j =0 ;j<30;j++){
+        cout << adiajency_matrix[i][j] << " ";
+      }
+      cout << endl;
     }
 
 }
