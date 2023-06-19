@@ -1,120 +1,120 @@
-0 12 1.32834
-0 15 1.31674
-0 18 0.749667
-1 7 1.78899
-1 13 0.917878
-1 24 1.85828
-2 16 1.0139
-2 20 1.46168
-2 22 1.53212
-3 6 1.75385
-3 12 2.30532
-3 14 2.41174
-4 8 1.16108
-4 9 1.79739
-4 28 1.35059
-5 8 1.41354
-5 17 1.45836
-5 27 1.23685
-6 12 1.722
-6 14 0.884138
-6 26 0.940213
-7 1 1.78899
-7 13 0.940213
-7 29 0.395601
-8 4 1.16108
-8 5 1.41354
-8 17 1.45344
-9 17 1.214
-9 26 0.976217
-9 28 0.572451
-10 11 0.530094
-10 19 0.4993
-10 21 0.166433
-11 15 0.466905
-11 19 0.282312
-11 21 0.464866
-12 0 1.32834
-12 6 1.722
-12 26 1.59176
-13 1 0.917878
-13 7 0.940213
-13 29 1.26905
-14 6 0.884138
-14 26 1.19419
-14 28 1.54693
-15 11 0.466905
-15 19 0.734098
-15 25 0.553624
-16 10 0.991564
-16 20 0.516236
-16 23 0.910055
-17 9 1.214
-17 18 1.19633
-17 27 0.755381
-18 0 0.749667
-18 25 0.984937
-18 27 1.03005
-19 10 0.4993
-19 11 0.282312
-19 21 0.526308
-20 10 0.537122
-20 16 0.516236
-20 23 0.466154
-21 10 0.166433
-21 11 0.464866
-21 19 0.526308
-22 19 1.08724
-22 25 0.95
-22 27 0.957079
-23 10 0.671863
-23 20 0.466154
-23 21 0.740608
-24 13 1.42594
-24 15 1.44838
-24 21 1.69189
-25 11 0.54231
-25 15 0.553624
-25 19 0.612046
-26 6 0.940213
-26 9 0.976217
-26 14 1.19419
-27 17 0.755381
-27 18 1.03005
-27 22 0.957079
-28 4 1.35059
-28 9 0.572451
-28 26 1.29341
-29 7 0.395601
-29 12 1.7557
-29 13 1.26905
-Waypoint 0 is connected to: 12 15 18 
-Waypoint 1 is connected to: 7 13 24 
-Waypoint 2 is connected to: 16 20 22 
-Waypoint 3 is connected to: 6 12 14 
-Waypoint 4 is connected to: 8 9 28 
-Waypoint 5 is connected to: 8 17 27 
-Waypoint 6 is connected to: 12 14 26 
-Waypoint 7 is connected to: 1 13 29 
-Waypoint 8 is connected to: 4 5 17 
-Waypoint 9 is connected to: 17 26 28 
-Waypoint 10 is connected to: 11 19 21 
-Waypoint 11 is connected to: 15 19 21 
-Waypoint 12 is connected to: 0 6 26 
-Waypoint 13 is connected to: 1 7 29 
-Waypoint 14 is connected to: 6 26 28 
-Waypoint 15 is connected to: 11 19 25 
-Waypoint 16 is connected to: 10 20 23 
-Waypoint 17 is connected to: 9 18 27 
-Waypoint 18 is connected to: 0 25 27 
-Waypoint 19 is connected to: 10 11 21 
-Waypoint 20 is connected to: 10 16 23 
-Waypoint 21 is connected to: 10 11 19 
-Waypoint 22 is connected to: 19 25 27 
-Waypoint 23 is connected to: 10 20 21 
-Waypoint 24 is connected to: 13 15 21 
-Waypoint 25 is connected to: 11 15 19 
-Waypoint 26 is connected to: 6 9 14 
-Waypoint 27 is connected to: 17 18 22 
-Waypoint 28 is connected to: 4 9 26 
-Waypoint 29 is connected to: 7 12 13 
+0 7 0.973499
+0 18 0.597746
+0 26 0.281603
+1 6 1.44921
+1 20 1.72838
+1 24 1.67839
+2 13 1.59298
+2 15 1.12645
+2 22 1.43024
+3 8 1.48839
+3 12 1.75283
+3 28 2.07473
+4 9 0.696419
+4 10 1.03586
+4 25 1.09289
+5 9 1.86682
+5 10 1.52086
+5 15 1.9542
+6 14 1.10494
+6 24 1.32076
+6 27 1.31095
+7 0 0.973499
+7 18 0.758947
+7 19 0.822982
+8 3 1.48839
+8 12 1.8348
+8 28 0.607454
+9 4 0.696419
+9 10 0.404969
+9 25 1.15039
+10 4 1.03586
+10 9 0.404969
+10 25 1.09005
+11 17 0.353553
+11 21 1.15525
+11 25 1.15676
+12 3 1.75283
+12 17 1.4151
+12 21 0.671193
+13 15 0.766877
+13 22 0.266833
+13 23 0.228035
+14 24 0.313209
+14 27 0.448219
+14 29 0.742496
+15 13 0.766877
+15 22 0.807775
+15 23 0.930215
+16 13 0.813204
+16 22 0.706612
+16 23 0.818841
+17 11 0.353553
+17 12 1.4151
+17 21 0.815843
+18 0 0.597746
+18 7 0.758947
+18 26 0.656201
+19 0 1.34082
+19 7 0.822982
+19 25 1.31947
+20 14 0.866487
+20 24 0.553624
+20 29 0.390512
+21 11 1.15525
+21 12 0.671193
+21 17 0.815843
+22 13 0.266833
+22 16 0.706612
+22 23 0.466476
+23 13 0.228035
+23 16 0.818841
+23 22 0.466476
+24 14 0.313209
+24 20 0.553624
+24 29 0.491935
+25 4 1.09289
+25 9 1.15039
+25 10 1.09005
+26 0 0.281603
+26 18 0.656201
+26 27 1.19436
+27 14 0.448219
+27 24 0.6772
+27 29 0.905207
+28 8 0.607454
+28 27 1.55425
+28 29 1.44903
+29 14 0.742496
+29 20 0.390512
+29 24 0.491935
+Waypoint 0 is connected to: 7 18 26 
+Waypoint 1 is connected to: 6 20 24 
+Waypoint 2 is connected to: 13 15 22 
+Waypoint 3 is connected to: 8 12 28 
+Waypoint 4 is connected to: 9 10 25 
+Waypoint 5 is connected to: 9 10 15 
+Waypoint 6 is connected to: 14 24 27 
+Waypoint 7 is connected to: 0 18 19 
+Waypoint 8 is connected to: 3 12 28 
+Waypoint 9 is connected to: 4 10 25 
+Waypoint 10 is connected to: 4 9 25 
+Waypoint 11 is connected to: 17 21 25 
+Waypoint 12 is connected to: 3 17 21 
+Waypoint 13 is connected to: 15 22 23 
+Waypoint 14 is connected to: 24 27 29 
+Waypoint 15 is connected to: 13 22 23 
+Waypoint 16 is connected to: 13 22 23 
+Waypoint 17 is connected to: 11 12 21 
+Waypoint 18 is connected to: 0 7 26 
+Waypoint 19 is connected to: 0 7 25 
+Waypoint 20 is connected to: 14 24 29 
+Waypoint 21 is connected to: 11 12 17 
+Waypoint 22 is connected to: 13 16 23 
+Waypoint 23 is connected to: 13 16 22 
+Waypoint 24 is connected to: 14 20 29 
+Waypoint 25 is connected to: 4 9 10 
+Waypoint 26 is connected to: 0 18 27 
+Waypoint 27 is connected to: 14 24 29 
+Waypoint 28 is connected to: 8 27 29 
+Waypoint 29 is connected to: 14 20 24 
