@@ -36,7 +36,8 @@ using namespace arma;
 map <string, vector<double> > region_mapping;
 
 double matrix_distances[30][30];
-double matrix_connections[30][30] = {0.0};
+
+double adiajency_matrix[30][30] = {0};
 int k = 3;
 
 extern "C" ExternalSolver* create_object(){
@@ -181,42 +182,47 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
      }
 
 // Struttura per rappresentare un arco nel grafo
+// Struttura per rappresentare un arco nel grafo
 struct Edge {
-    int source;
-    int destination;
+    int src;
+    int dest;
 
-    Edge(int src, int dest) : source(src), destination(dest) {}
+    Edge(int source, int destination) : src(source), dest(destination) {}
 };
 
-// Funzione per generare un grafo non pesato, aciclico e non orientato
 vector<Edge> generateGraph(int numNodes, int maxConnections) {
     vector<Edge> graph;
-    srand(time(NULL));
 
     vector<int> nodes(numNodes);
+    vector<int> connections(numNodes);
     for (int i = 0; i < numNodes; i++) {
         nodes[i] = i;
+        connections[i] = 0;
     }
 
-    random_shuffle(nodes.begin(), nodes.end());
+    for (int i = 0; i < numNodes; i++) {
+        int connectionsAdded = 0;
+        int connection = rand() % maxConnections ;
+        if (connection == 0) {
+            connection = 1;
+        }
+      
+        
 
-    for (int i = 1; i < numNodes; i++) {
-        random_device rd;
-        mt19937 gen(rd());
-        uniform_int_distribution<int> dist(1, 3);
+        while (connectionsAdded < connection) {
+            int randomNumber = rand() % numNodes;
 
-        int numConnections = dist(gen); //rand() % 3 + 1;
-        int connections = 0;
-
-        for (int j = 0; j < i && connections < numConnections; j++) {
-            if (rand() % 2 == 0) {
-                graph.push_back(Edge(nodes[i], nodes[j]));
-                graph.push_back(Edge(nodes[j], nodes[i])); // Aggiungi l'arco simmetrico
-                connections++;
+            if (connections[randomNumber] < maxConnections && randomNumber != i) {
+                graph.push_back(Edge(nodes[i], nodes[randomNumber]));
+                graph.push_back(Edge(nodes[randomNumber], nodes[i])); // Aggiungi l'arco simmetrico
+                connections[i]++;
+                connections[randomNumber]++;
+                connectionsAdded++;
+                adiajency_matrix[i][randomNumber] = 1;
+                adiajency_matrix[randomNumber][i] = 1;
             }
         }
     }
-
     return graph;
 }
 
@@ -243,31 +249,31 @@ double computeDistance(tuple<double, double, double> wp1, tuple<double, double, 
     return sqrt(dx * dx + dy * dy /*+ dtheta * dtheta*/);
 }
 
-void findMin(double row[], int i) {
+// void findMin(double row[], int i) {
   
-    int index =0;
-    double min = row[index];
-    if (row[index] == 0.0) {
-      index++;
-      min = row[index];
-    }
-    int minIndex = -1;
+//     int index =0;
+//     double min = row[index];
+//     if (row[index] == 0.0) {
+//       index++;
+//       min = row[index];
+//     }
+//     int minIndex = -1;
 
-    for (int i = 0; i < 30; ++i) {
-      if(row[i] != 0.0){
-        if (row[i] <= min) {
-            min = row[i];
-            minIndex = i;
-        }
-      }
-    }
-    row[minIndex] = 0.0;
-    matrix_connections[i][minIndex] = min;
-}
+//     for (int i = 0; i < 30; ++i) {
+//       if(row[i] != 0.0){
+//         if (row[i] <= min) {
+//             min = row[i];
+//             minIndex = i;
+//         }
+//       }
+//     }
+//     row[minIndex] = 0.0;
+//     matrix_connections[i][minIndex] = min;
+// }
 
 void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoints) {
     int numNodes = 30; // Numero di nodi nel grafo
-    int maxConnections = 3; // Massime connessioni per nodo
+    int maxConnections = 4; // Massime connessioni per nodo
     
     ofstream outfile("../visits_domain/connections.txt");
     if (!outfile.is_open()) {
@@ -277,57 +283,24 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
 
     int numWaypoints = randomWaypoints.size();
 
-    for(int i = 0; i < numWaypoints; i++){
-      for (int j = 0; j < numWaypoints; j++){
-        matrix_distances[i][j] = computeDistance(randomWaypoints[i], randomWaypoints[j]);
-      } 
-      // Print the matrix in the terminal
-      // cout << i << ": ";
-      // for (int j = 0; j < numWaypoints; j++){
-      //   cout << matrix_distances[i][j] << " ";
-      // }
-      // cout << endl;
-    }
-
-    for(int i = 0; i < numWaypoints; i++){
-      for (int j=0;j<k;j++){
-      findMin(matrix_distances[i], i);
-      }
-    }
-
-    for(int i = 0; i < numWaypoints; i++){
-      for (int j = 0; j < numWaypoints; j++){
-        if (matrix_connections[i][j] != 0.0) {
-          outfile << i << " " << j << " " << matrix_connections[i][j] << endl;
-        }
-      }
-    }
-
-    // Print the matrix in the terminal
-    // for(int i = 0; i < numWaypoints; i++){
-    //   cout << i << ": ";
-    //   for (int j = 0; j < numWaypoints; j++){
-    //     cout << matrix_connections[i][j] << " ";
-    //   }
-    //   cout << endl;
-    // }
-
-    // Print the matrix in the file
-    for(int i = 0; i < numWaypoints; i++){
-      outfile << "Waypoint " << i << " is connected to: ";
-      for (int j = 0; j < numWaypoints; j++){
-        if (matrix_connections[i][j] != 0.0) {
-          outfile << j << " ";
-        }
-      }
-      outfile << endl;
-    }
+    
     vector<Edge> graph = generateGraph(numNodes, maxConnections);
 
-    for (const Edge& edge : graph) {
-        cout << edge.source << " -- " << edge.destination << endl;
+    for(int i = 0; i < numWaypoints; i++){
+      for (int j = 0; j < numWaypoints; j++){
+        if (adiajency_matrix[i][j] != 0.0)
+        {
+          matrix_distances[i][j] = computeDistance(randomWaypoints[i], randomWaypoints[j]);
+
+        }
+        cout << matrix_distances[i][j] << " ";
+      } 
+      cout << endl;
     }
 
+    for (const Edge& edge : graph) {
+        cout << edge.src << " -- " << edge.dest<< endl;
+    }
 }
 
 void generateRandomWaypoints()
