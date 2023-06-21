@@ -1,21 +1,20 @@
-    /*
-     <one line to give the program's name and a brief idea of what it does.>
-     Copyright (C) 2015  <copyright holder> <email>
-     
-     This program is free software: you can redistribute it and/or modify
-     it under the terms of the GNU General Public License as published by
-     the Free Software Foundation, either version 3 of the License, or
-     (at your option) any later version.
-     
-     This program is distributed in the hope that it will be useful,
-     but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     GNU General Public License for more details.
-     
-     You should have received a copy of the GNU General Public License
-     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-     */
-
+/*
+  <one line to give the program's name and a brief idea of what it does.>
+  Copyright (C) 2015  <copyright holder> <email>
+  
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "VisitSolver.h"
 #include "ExternalSolver.h"
@@ -42,7 +41,6 @@ map <string, vector<double> > region_mapping;
 double matrix_distances[30][30];
 
 double adiajency_matrix[30][30] = {0};
-int k = 3;
 
 extern "C" ExternalSolver* create_object(){
   return new VisitSolver();
@@ -74,17 +72,51 @@ void VisitSolver::loadSolver(string *parameters, int n){
   affected = list<string>(x,x+1);
   dependencies = list<string>(y,y+2);
 
-  // TODO: write the correct path
-
   // We are loading the way point file in the planner.
-  string waypoint_file = "visits_domain/waypoint.txt";   // change this to the correct path
+  string waypoint_file = "visits_domain/waypoint.txt"; 
   parseWaypoint(waypoint_file);
 
   // We are loading the landmark file in the planner.
-  string landmark_file = "visits_domain/landmark.txt";  // change this to the correct path
+  string landmark_file = "visits_domain/landmark.txt";
   parseLandmark(landmark_file);
+}
 
-  //startEKF();
+double minimal_path(string from, string to){
+  int from_index = stoi(from.substr(1,2));
+  int to_index = stoi(to.substr(1,2));
+
+  // initialize distances and visited arrays
+  vector<double> distances(30, numeric_limits<double>::infinity());
+  vector<bool> visited(30, false);
+  distances[from_index] = 0.0;
+
+  // run Dijkstra's algorithm
+  for (int i = 0; i < 30 - 1; i++) {
+    // find the unvisited node with the smallest distance
+    int min_index = -1;
+    double min_distance = numeric_limits<double>::infinity();
+    for (int j = 0; j < 30; j++) {
+      if (!visited[j] && distances[j] < min_distance) {
+        min_index = j;
+        min_distance = distances[j];
+      }
+    }
+
+    // mark the node as visited
+    visited[min_index] = true;
+
+    // update distances to neighboring nodes
+    for (int j = 0; j < 30; j++) {
+      if (!visited[j] && matrix_distances[min_index][j] > 0.0) {
+        double new_distance = distances[min_index] + matrix_distances[min_index][j];
+        if (new_distance < distances[j]) {
+          distances[j] = new_distance;
+        }
+      }
+    }
+  }
+
+  return distances[to_index];
 }
 
 map<string,double> VisitSolver::callExternalSolver(map<string,double> initialState,bool isHeuristic){
@@ -119,10 +151,12 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
         if (value>0){
 
           // Here we are storing these strings "from" and "to" are regions, need to extract wps (poses)
-          string from = tmp.substr(0,2);   // from and to are regions, need to extract wps (poses)
+          string from = tmp.substr(0,2);
           string to = tmp.substr(3,2);
 
-          // distance_euc(from, to);
+          act_cost = minimal_path(from, to);
+          cout << endl;
+          cout << "Distance from " << from << " to " << to << ": " << act_cost << endl;
         }
       }
     }
@@ -132,10 +166,7 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
       }
       else if(function=="act-cost"){
         act_cost = value;
-      } //else if(function=="dummy1"){
-        //duy = value;              
-        ////cout << parameter << " " << value << endl;
-      //}
+      }
     }
   }
 
@@ -179,12 +210,11 @@ void VisitSolver::parseParameters(string parameters){
 }
 
 double VisitSolver::calculateExtern(double external, double total_cost){
-  //float random1 = static_cast <float> (rand())/static_cast <float>(RAND_MAX);
-  double cost = 2;  //random1;
+  double cost = total_cost;
   return cost;
 }
 
-// Struttura per rappresentare un arco nel grafo
+// Structure to store the edge of the graph
 struct Edge {
   int src;
   int dest;
@@ -214,7 +244,7 @@ vector<Edge> generateGraph(int numNodes, int maxConnections) {
 
       if (connections[randomNumber] < maxConnections && randomNumber != i)  {
         graph.push_back(Edge(nodes[i], nodes[randomNumber]));
-        graph.push_back(Edge(nodes[randomNumber], nodes[i])); // Aggiungi l'arco simmetrico
+        graph.push_back(Edge(nodes[randomNumber], nodes[i]));
         connections[i]++;
         connections[randomNumber]++;
         connectionsAdded++;
@@ -227,9 +257,9 @@ vector<Edge> generateGraph(int numNodes, int maxConnections) {
   return graph;
 }
 
-bool checkForbiddenWaypoint(double x, double y, /*double theta,*/ const vector<tuple<double, double, double>>& forbiddenWaypoint) {
+bool checkForbiddenWaypoint(double x, double y, const vector<tuple<double, double, double>>& forbiddenWaypoint) {
   for (const auto& coord : forbiddenWaypoint) {
-    if (x == get<0>(coord) && y == get<1>(coord) /*&& theta == get<2>(coord)*/) {
+    if (x == get<0>(coord) && y == get<1>(coord)) {
       return true;  // The coordinates are forbidden
     }
   }
@@ -244,8 +274,7 @@ double roundDecimal(double value, int decimalPlaces) {
 double computeDistance(tuple<double, double, double> wp1, tuple<double, double, double> wp2) {
   double dx = get<0>(wp2) - get<0>(wp1);
   double dy = get<1>(wp2) - get<1>(wp1);
-  //double dtheta = wp2.z - wp1.z;
-  return sqrt(dx * dx + dy * dy /*+ dtheta * dtheta*/);
+  return sqrt(dx * dx + dy * dy);
 }
 
 // void findMin(double row[], int i) {
@@ -271,8 +300,8 @@ double computeDistance(tuple<double, double, double> wp1, tuple<double, double, 
 // }
 
 void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoints) {
-  int numNodes = 30; // Numero di nodi nel grafo
-  int maxConnections = 4; // Massime connessioni per nodo
+  int numNodes = 30; // Number of nodes in the graph
+  int maxConnections = 4; // Maximum number of connections per node
   
   ofstream outfile("../visits_domain/connections.txt");
   if (!outfile.is_open()) {
@@ -289,13 +318,7 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
       if (adiajency_matrix[i][j] != 0.0){
         matrix_distances[i][j] = computeDistance(randomWaypoints[i], randomWaypoints[j]);
       }
-      cout << matrix_distances[i][j] << " ";
     } 
-    cout << endl;
-  }
-
-  for (const Edge& edge : graph) {
-    cout << edge.src << " -- " << edge.dest<< endl;
   }
 }
 
@@ -342,10 +365,10 @@ void generateRandomWaypoints()
       //theta = roundDecimal(dist(gen), 2);
 
       // Add all the way points to the forbidden coordinates
-      randomWaypoint[i] = make_tuple(x, y, /*theta*/0); // Add the waypoint to the vector of waypoints
+      randomWaypoint[i] = make_tuple(x, y, 0); // Add the waypoint to the vector of waypoints
 
     } while ((x >= 2.0 && y >= 2.0) || (x >= 2 && y <= -2) || (x <= -2.0 && y <= -2.0) 
-              || (x <= -2 && y >= 2) || checkForbiddenWaypoint(x, y, /*theta,*/ forbiddenWaypoint));  // Check if the generated coordinates are forbidden
+              || (x <= -2 && y >= 2) || checkForbiddenWaypoint(x, y, forbiddenWaypoint));  // Check if the generated coordinates are forbidden
 
     // Write waypoint to file
     outfile << endl << waypoint_name << " [" << x << "," << y << "," << "0]";
@@ -413,7 +436,3 @@ void VisitSolver::parseLandmark(string landmark_file){
     }
   }
 }
-
-
-//void VisitSolver::distance_euc( string from, string to){
-//} 
