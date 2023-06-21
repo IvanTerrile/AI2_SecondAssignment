@@ -27,6 +27,7 @@
 #include <iomanip>
 #include <queue>
 #include <unordered_map>
+#include "armadillo"
 
 using namespace std;
 

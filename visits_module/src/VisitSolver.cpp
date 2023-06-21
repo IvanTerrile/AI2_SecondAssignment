@@ -22,11 +22,15 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <typeinfo>
 #include <sstream>
 #include <fstream>
+#include <math.h> 
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <algorithm>
+
 #include "armadillo"
 #include <initializer_list>
 
@@ -60,30 +64,35 @@ void VisitSolver::loadSolver(string *parameters, int n){
   starting_position = "r0";
   string Paramers = parameters[0];
 
+  // Indirect variables: Whatever compuations we do, those values are stored in these
+  // indirect variable.
   char const *x[]={"dummy"};
+
+  // Direct variables: These are the normal PDDL variable that just stored values.
   char const *y[]={"act-cost","triggered"};
   parseParameters(Paramers);
   affected = list<string>(x,x+1);
   dependencies = list<string>(y,y+2);
 
+  // TODO: write the correct path
+
+  // We are loading the way point file in the planner.
   string waypoint_file = "visits_domain/waypoint.txt";   // change this to the correct path
   parseWaypoint(waypoint_file);
 
+  // We are loading the landmark file in the planner.
   string landmark_file = "visits_domain/landmark.txt";  // change this to the correct path
   parseLandmark(landmark_file);
 
-
-        //startEKF();
+  //startEKF();
 }
 
 map<string,double> VisitSolver::callExternalSolver(map<string,double> initialState,bool isHeuristic){
-
   map<string, double> toReturn;
   map<string, double>::iterator iSIt = initialState.begin();
   map<string, double>::iterator isEnd = initialState.end();
   double dummy;
   double act_cost;
-
 
   map<string, double> trigger;
 
@@ -103,130 +112,120 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
 
       function.erase(n,function.length()-1);
       arg.erase(0,n+1);
+
+      // This is the triggered function from which we our communicating with planner
       if(function=="triggered"){
         trigger[arg] = value>0?1:0;
         if (value>0){
 
-      string from = tmp.substr(0,2);   // from and to are regions, need to extract wps (poses)
-      string to = tmp.substr(3,2);
+          // Here we are storing these strings "from" and "to" are regions, need to extract wps (poses)
+          string from = tmp.substr(0,2);   // from and to are regions, need to extract wps (poses)
+          string to = tmp.substr(3,2);
 
-
-     // distance_euc(from, to);
-
+          // distance_euc(from, to);
+        }
+      }
+    }
+    else{
+      if(function=="dummy"){
+        dummy = value;
+      }
+      else if(function=="act-cost"){
+        act_cost = value;
+      } //else if(function=="dummy1"){
+        //duy = value;              
+        ////cout << parameter << " " << value << endl;
+      //}
     }
   }
-}else{
-  if(function=="dummy"){
-    dummy = value;
 
-  }else if(function=="act-cost"){
-    act_cost = value;
-                 } //else if(function=="dummy1"){
-                    //duy = value;              
-                    ////cout << parameter << " " << value << endl;
-                 //}
-                 }
-               }
+  double results = calculateExtern(dummy, act_cost);
 
+  if (ExternalSolver::verbose){
+    cout << "(dummy) " << results << endl;
+  }
 
-               double results = calculateExtern(dummy, act_cost);
-               if (ExternalSolver::verbose){
-                cout << "(dummy) " << results << endl;
-              }
+  toReturn["(dummy)"] = results;
+  return toReturn;
+}
 
-              toReturn["(dummy)"] = results;
+list<string> VisitSolver::getParameters(){
+  return affected;
+}
 
-
-              return toReturn;
-            }
-
-            list<string> VisitSolver::getParameters(){
-
-              return affected;
-            }
-
-            list<string> VisitSolver::getDependencies(){
-
-              return dependencies;
-            }
-
-
-            void VisitSolver::parseParameters(string parameters){
-
-              int curr, next;
-              string line;
-              ifstream parametersFile(parameters.c_str());
-              if (parametersFile.is_open()){
-                while (getline(parametersFile,line)){
-                 curr=line.find(" ");
-                 string region_name = line.substr(0,curr).c_str();
-                 curr=curr+1;
-                 while(true ){
-                  next=line.find(" ",curr);
-                  region_mapping[region_name].push_back(line.substr(curr,next-curr).c_str());
-                  if (next ==-1)
-                   break;
-                 curr=next+1;
-
-               }                
-             }
-
-           }
-
-         }
-
-         double VisitSolver::calculateExtern(double external, double total_cost){
-       //float random1 = static_cast <float> (rand())/static_cast <float>(RAND_MAX);
-       double cost = 2;//random1;
-       return cost;
-     }
-
-// Struttura per rappresentare un arco nel grafo
-// Struttura per rappresentare un arco nel grafo
-struct Edge {
-    int src;
-    int dest;
-
-    Edge(int source, int destination) : src(source), dest(destination) {}
-};
-
-vector<Edge> generateGraph(int numNodes, int maxConnections) {
-    vector<Edge> graph;
-
-    vector<int> nodes(numNodes);
-    vector<int> connections(numNodes);
-    for (int i = 0; i < numNodes; i++) {
-        nodes[i] = i;
-        connections[i] = 0;
-    }
-
-    for (int i = 0; i < numNodes; i++) {
-        int connectionsAdded = 0;
-        int connection = rand() % maxConnections ;
-        if (connection == 0) {
-            connection = 1;
-        }
-      
-        
-
-        while (connectionsAdded < connection) {
-            int randomNumber = rand() % numNodes;
-
-            if (connections[randomNumber] < maxConnections && randomNumber != i) {
-                graph.push_back(Edge(nodes[i], nodes[randomNumber]));
-                graph.push_back(Edge(nodes[randomNumber], nodes[i])); // Aggiungi l'arco simmetrico
-                connections[i]++;
-                connections[randomNumber]++;
-                connectionsAdded++;
-                adiajency_matrix[i][randomNumber] = 1;
-                adiajency_matrix[randomNumber][i] = 1;
-            }
-        }
-    }
-    return graph;
+list<string> VisitSolver::getDependencies(){
+  return dependencies;
 }
 
 
+void VisitSolver::parseParameters(string parameters){
+  int curr, next;
+  string line;
+  ifstream parametersFile(parameters.c_str());
+  if (parametersFile.is_open()){
+    while (getline(parametersFile,line)){
+      curr=line.find(" ");
+      string region_name = line.substr(0,curr).c_str();
+      curr=curr+1;
+      while(true ){
+        next=line.find(" ",curr);
+        region_mapping[region_name].push_back(line.substr(curr,next-curr).c_str());
+        if (next ==-1)
+          break;
+          curr=next+1;
+      }                
+    }
+  }
+}
+
+double VisitSolver::calculateExtern(double external, double total_cost){
+  //float random1 = static_cast <float> (rand())/static_cast <float>(RAND_MAX);
+  double cost = 2;  //random1;
+  return cost;
+}
+
+// Struttura per rappresentare un arco nel grafo
+struct Edge {
+  int src;
+  int dest;
+
+  Edge(int source, int destination) : src(source), dest(destination) {}
+};
+
+vector<Edge> generateGraph(int numNodes, int maxConnections) {
+  vector<Edge> graph;
+
+  vector<int> nodes(numNodes);
+  vector<int> connections(numNodes);
+  for (int i = 0; i < numNodes; i++) {
+    nodes[i] = i;
+    connections[i] = 0;
+  }
+
+  for (int i = 0; i < numNodes; i++) {
+    int connectionsAdded = 0;
+    int connection = rand() % maxConnections ;
+    if (connection == 0) {
+        connection = 1;
+    }
+      
+    while (connectionsAdded < connection) {
+      int randomNumber = rand() % numNodes;
+
+      if (connections[randomNumber] < maxConnections && randomNumber != i)  {
+        graph.push_back(Edge(nodes[i], nodes[randomNumber]));
+        graph.push_back(Edge(nodes[randomNumber], nodes[i])); // Aggiungi l'arco simmetrico
+        connections[i]++;
+        connections[randomNumber]++;
+        connectionsAdded++;
+        adiajency_matrix[i][randomNumber] = 1;
+        adiajency_matrix[randomNumber][i] = 1;
+      }
+    }
+  }
+
+  return graph;
+}
 
 bool checkForbiddenWaypoint(double x, double y, /*double theta,*/ const vector<tuple<double, double, double>>& forbiddenWaypoint) {
   for (const auto& coord : forbiddenWaypoint) {
@@ -243,10 +242,10 @@ double roundDecimal(double value, int decimalPlaces) {
 }
 
 double computeDistance(tuple<double, double, double> wp1, tuple<double, double, double> wp2) {
-    double dx = get<0>(wp2) - get<0>(wp1);
-    double dy = get<1>(wp2) - get<1>(wp1);
-    //double dtheta = wp2.z - wp1.z;
-    return sqrt(dx * dx + dy * dy /*+ dtheta * dtheta*/);
+  double dx = get<0>(wp2) - get<0>(wp1);
+  double dy = get<1>(wp2) - get<1>(wp1);
+  //double dtheta = wp2.z - wp1.z;
+  return sqrt(dx * dx + dy * dy /*+ dtheta * dtheta*/);
 }
 
 // void findMin(double row[], int i) {
@@ -272,35 +271,32 @@ double computeDistance(tuple<double, double, double> wp1, tuple<double, double, 
 // }
 
 void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoints) {
-    int numNodes = 30; // Numero di nodi nel grafo
-    int maxConnections = 4; // Massime connessioni per nodo
-    
-    ofstream outfile("../visits_domain/connections.txt");
-    if (!outfile.is_open()) {
-      cerr << "Unable to open connections.txt for writing." << endl;
-      return;
-    }
+  int numNodes = 30; // Numero di nodi nel grafo
+  int maxConnections = 4; // Massime connessioni per nodo
+  
+  ofstream outfile("../visits_domain/connections.txt");
+  if (!outfile.is_open()) {
+    cerr << "Unable to open connections.txt for writing." << endl;
+    return;
+  }
 
-    int numWaypoints = randomWaypoints.size();
+  int numWaypoints = randomWaypoints.size();
 
-    
-    vector<Edge> graph = generateGraph(numNodes, maxConnections);
+  vector<Edge> graph = generateGraph(numNodes, maxConnections);
 
-    for(int i = 0; i < numWaypoints; i++){
-      for (int j = 0; j < numWaypoints; j++){
-        if (adiajency_matrix[i][j] != 0.0)
-        {
-          matrix_distances[i][j] = computeDistance(randomWaypoints[i], randomWaypoints[j]);
+  for(int i = 0; i < numWaypoints; i++){
+    for (int j = 0; j < numWaypoints; j++){
+      if (adiajency_matrix[i][j] != 0.0){
+        matrix_distances[i][j] = computeDistance(randomWaypoints[i], randomWaypoints[j]);
+      }
+      cout << matrix_distances[i][j] << " ";
+    } 
+    cout << endl;
+  }
 
-        }
-        cout << matrix_distances[i][j] << " ";
-      } 
-      cout << endl;
-    }
-
-    for (const Edge& edge : graph) {
-        cout << edge.src << " -- " << edge.dest<< endl;
-    }
+  for (const Edge& edge : graph) {
+    cout << edge.src << " -- " << edge.dest<< endl;
+  }
 }
 
 void generateRandomWaypoints()
@@ -361,63 +357,63 @@ void generateRandomWaypoints()
   cout << "Waypoints have been written to 'waypoints.txt'." << endl;
 }
 
-     void VisitSolver::parseWaypoint(string waypoint_file){
-      
-      generateRandomWaypoints(); // generate random waypoints and write to file
-       int curr, next;
-       string line;
-       double pose1, pose2, pose3;
-       ifstream parametersFile(waypoint_file);
-       if (parametersFile.is_open()){
-        while (getline(parametersFile,line)){
-         curr=line.find("[");
-         string waypoint_name = line.substr(0,curr).c_str();
+void VisitSolver::parseWaypoint(string waypoint_file){
+  
+  generateRandomWaypoints(); // generate random waypoints and write to file
+  int curr, next;
+  string line;
+  double pose1, pose2, pose3;
+  ifstream parametersFile(waypoint_file);
 
-         curr=curr+1;
-         next=line.find(",",curr);
+  if (parametersFile.is_open()){
+    while (getline(parametersFile,line)){
+      curr=line.find("[");
 
-         pose1 = (double)atof(line.substr(curr,next-curr).c_str());
-         curr=next+1; next=line.find(",",curr);
+      string waypoint_name = line.substr(0,curr).c_str();
 
-         pose2 = (double)atof(line.substr(curr,next-curr).c_str());
-         curr=next+1; next=line.find("]",curr);
+      curr=curr+1;
+      next=line.find(",",curr);
 
-         pose3 = (double)atof(line.substr(curr,next-curr).c_str());
+      pose1 = (double)atof(line.substr(curr,next-curr).c_str());
+      curr=next+1; next=line.find(",",curr);
 
-         waypoint[waypoint_name] = vector<double> {pose1, pose2, pose3};
-       }
-     }
+      pose2 = (double)atof(line.substr(curr,next-curr).c_str());
+      curr=next+1; next=line.find("]",curr);
 
-   }
+      pose3 = (double)atof(line.substr(curr,next-curr).c_str());
 
-   void VisitSolver::parseLandmark(string landmark_file){
+      waypoint[waypoint_name] = vector<double> {pose1, pose2, pose3};
+    }
+  }
+}
 
-     int curr, next;
-     string line;
-     double pose1, pose2, pose3;
-     ifstream parametersFile(landmark_file);
-     if (parametersFile.is_open()){
-      while (getline(parametersFile,line)){
-       curr=line.find("[");
-       string landmark_name = line.substr(0,curr).c_str();
-       
-       curr=curr+1;
-       next=line.find(",",curr);
+void VisitSolver::parseLandmark(string landmark_file){
 
-       pose1 = (double)atof(line.substr(curr,next-curr).c_str());
-       curr=next+1; next=line.find(",",curr);
+  int curr, next;
+  string line;
+  double pose1, pose2, pose3;
+  ifstream parametersFile(landmark_file);
+  if (parametersFile.is_open()){
+    while (getline(parametersFile,line)){
+      curr=line.find("[");
+      string landmark_name = line.substr(0,curr).c_str();
 
-       pose2 = (double)atof(line.substr(curr,next-curr).c_str());
-       curr=next+1; next=line.find("]",curr);
+      curr=curr+1;
+      next=line.find(",",curr);
 
-       pose3 = (double)atof(line.substr(curr,next-curr).c_str());
+      pose1 = (double)atof(line.substr(curr,next-curr).c_str());
+      curr=next+1; next=line.find(",",curr);
 
-       landmark[landmark_name] = vector<double> {pose1, pose2, pose3};
-     }
-   }
-   
- }
+      pose2 = (double)atof(line.substr(curr,next-curr).c_str());
+      curr=next+1; next=line.find("]",curr);
+
+      pose3 = (double)atof(line.substr(curr,next-curr).c_str());
+
+      landmark[landmark_name] = vector<double> {pose1, pose2, pose3};
+    }
+  }
+}
 
 
-  //void VisitSolver::distance_euc( string from, string to){
-  //} 
+//void VisitSolver::distance_euc( string from, string to){
+//} 
