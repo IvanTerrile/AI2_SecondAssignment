@@ -40,7 +40,7 @@ map <string, vector<double> > region_mapping;
 
 double matrix_distances[30][30];
 
-double adiajency_matrix[30][30] = {0};
+double adiajency_matrix[30][30] = {0.0};
 
 extern "C" ExternalSolver* create_object(){
   return new VisitSolver();
@@ -107,8 +107,8 @@ double minimal_path(string from, string to){
 
     // update distances to neighboring nodes
     for (int j = 0; j < 30; j++) {
-      if (!visited[j] && matrix_distances[min_index][j] > 0.0) {
-        double new_distance = distances[min_index] + matrix_distances[min_index][j];
+      if (!visited[j] && adiajency_matrix[min_index][j] > 0.0) {
+        double new_distance = distances[min_index] + adiajency_matrix[min_index][j];
         if (new_distance < distances[j]) {
           distances[j] = new_distance;
         }
@@ -215,46 +215,58 @@ double VisitSolver::calculateExtern(double external, double total_cost){
 }
 
 // Structure to store the edge of the graph
-struct Edge {
-  int src;
-  int dest;
-
-  Edge(int source, int destination) : src(source), dest(destination) {}
+// Struttura per rappresentare un arco nel grafo
+struct Arco {
+    int nodo1;
+    int nodo2;
+    double peso;
 };
 
-vector<Edge> generateGraph(int numNodes, int maxConnections) {
-  vector<Edge> graph;
+// Funzione di confronto per l'ordinamento degli archi in base al peso
+bool confrontoArchi(const Arco& arco1, const Arco& arco2) {
+    return arco1.peso < arco2.peso;
+}
 
-  vector<int> nodes(numNodes);
-  vector<int> connections(numNodes);
-  for (int i = 0; i < numNodes; i++) {
-    nodes[i] = i;
-    connections[i] = 0;
-  }
+// Funzione per trovare l'insieme di un elemento x utilizzando la tecnica del disjoint-set
+int trovaInsieme(vector<int>& insiemi, int x) {
+    if (insiemi[x] == x)
+        return x;
+    return trovaInsieme(insiemi, insiemi[x]);
+}
 
-  for (int i = 0; i < numNodes; i++) {
-    int connectionsAdded = 0;
-    int connection = rand() % maxConnections ;
-    if (connection == 0) {
-        connection = 1;
+// Funzione per unire due insiemi
+void unisciInsiemi(vector<int>& insiemi, int x, int y) {
+    int radiceX = trovaInsieme(insiemi, x);
+    int radiceY = trovaInsieme(insiemi, y);
+    insiemi[radiceX] = radiceY;
+}
+
+// Funzione per il calcolo dell'albero di copertura minimo utilizzando l'algoritmo di Kruskal
+void kruskal(vector<Arco>& archi, int numNodi, int numMaxConnessioni) {
+    // Ordinamento degli archi in base al peso
+    sort(archi.begin(), archi.end(), confrontoArchi);
+
+    vector<int> insiemi(numNodi);
+    for (int i = 0; i < numNodi; i++)
+        insiemi[i] = i;
+
+    int archiAggiunti = 0;
+    int indiceArco = 0;
+
+    while (archiAggiunti < numNodi - 1 && indiceArco < archi.size()) {
+        Arco arcoCorrente = archi[indiceArco++];
+        int radiceNodo1 = trovaInsieme(insiemi, arcoCorrente.nodo1);
+        int radiceNodo2 = trovaInsieme(insiemi, arcoCorrente.nodo2);
+
+        if (radiceNodo1 != radiceNodo2) {
+            //cout << "Arco " << arcoCorrente.nodo1 << " - " << arcoCorrente.nodo2 << " con peso " << arcoCorrente.peso << endl;
+
+            unisciInsiemi(insiemi, radiceNodo1, radiceNodo2);
+            adiajency_matrix[arcoCorrente.nodo1][arcoCorrente.nodo2] = arcoCorrente.peso;
+            adiajency_matrix[arcoCorrente.nodo2][arcoCorrente.nodo1] = arcoCorrente.peso;
+            archiAggiunti++;
+        }
     }
-      
-    while (connectionsAdded < connection) {
-      int randomNumber = rand() % numNodes;
-
-      if (connections[randomNumber] < maxConnections && randomNumber != i)  {
-        graph.push_back(Edge(nodes[i], nodes[randomNumber]));
-        graph.push_back(Edge(nodes[randomNumber], nodes[i]));
-        connections[i]++;
-        connections[randomNumber]++;
-        connectionsAdded++;
-        adiajency_matrix[i][randomNumber] = 1;
-        adiajency_matrix[randomNumber][i] = 1;
-      }
-    }
-  }
-
-  return graph;
 }
 
 bool checkForbiddenWaypoint(double x, double y, const vector<tuple<double, double, double>>& forbiddenWaypoint) {
@@ -311,14 +323,27 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
 
   int numWaypoints = randomWaypoints.size();
 
-  vector<Edge> graph = generateGraph(numNodes, maxConnections);
+  vector<Arco> archi;
 
-  for(int i = 0; i < numWaypoints; i++){
-    for (int j = 0; j < numWaypoints; j++){
-      if (adiajency_matrix[i][j] != 0.0){
-        matrix_distances[i][j] = computeDistance(randomWaypoints[i], randomWaypoints[j]);
+  for (int i=0;i<numWaypoints;i++){
+    for (int j=0;j<numWaypoints;j++){
+      if (i!=j){
+        double distance = computeDistance(randomWaypoints[i], randomWaypoints[j]);
+        archi.push_back({i, j, distance});
       }
-    } 
+    }
+  }
+  kruskal(archi, numWaypoints, maxConnections);
+  for (int i=0;i<numWaypoints;i++){
+    outfile << "Waypoint " << i << " is connected to: ";
+    for (int j=0;j<numWaypoints;j++){
+        if (adiajency_matrix[i][j] != 0.0)
+        {
+          
+        outfile << j << " ";
+        }
+    }
+    outfile << endl;
   }
 }
 

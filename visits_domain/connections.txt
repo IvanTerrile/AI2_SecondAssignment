@@ -1,0 +1,30 @@
+Waypoint 0 is connected to: 9 19 
+Waypoint 1 is connected to: 8 
+Waypoint 2 is connected to: 26 
+Waypoint 3 is connected to: 22 
+Waypoint 4 is connected to: 27 
+Waypoint 5 is connected to: 18 20 
+Waypoint 6 is connected to: 14 24 
+Waypoint 7 is connected to: 18 25 
+Waypoint 8 is connected to: 1 17 
+Waypoint 9 is connected to: 0 23 
+Waypoint 10 is connected to: 16 21 
+Waypoint 11 is connected to: 25 27 28 
+Waypoint 12 is connected to: 28 29 
+Waypoint 13 is connected to: 19 
+Waypoint 14 is connected to: 6 
+Waypoint 15 is connected to: 20 26 
+Waypoint 16 is connected to: 10 23 
+Waypoint 17 is connected to: 8 21 
+Waypoint 18 is connected to: 5 7 
+Waypoint 19 is connected to: 0 13 
+Waypoint 20 is connected to: 5 15 
+Waypoint 21 is connected to: 10 17 24 
+Waypoint 22 is connected to: 3 29 
+Waypoint 23 is connected to: 9 16 25 
+Waypoint 24 is connected to: 6 21 
+Waypoint 25 is connected to: 7 11 23 
+Waypoint 26 is connected to: 2 15 
+Waypoint 27 is connected to: 4 11 
+Waypoint 28 is connected to: 11 12 
+Waypoint 29 is connected to: 12 22 
