@@ -41,10 +41,8 @@ public:
     virtual  list<string> getParameters();
     virtual  list<string> getDependencies();
     map<string, vector<double>> waypoint;
-    map<string, vector<double>> landmark;
    
     void parseWaypoint(string waypoint_file);
-    void parseLandmark(string landmark_file);
      
     map<string, vector<string>> region_mapping;
     vector <string> source, target; 

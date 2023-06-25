@@ -38,8 +38,6 @@ using namespace arma;
 
 map <string, vector<double> > region_mapping;
 
-double matrix_distances[30][30];
-
 double adiajency_matrix[30][30] = {0.0};
 
 extern "C" ExternalSolver* create_object(){
@@ -75,13 +73,9 @@ void VisitSolver::loadSolver(string *parameters, int n){
   // We are loading the way point file in the planner.
   string waypoint_file = "visits_domain/waypoint.txt"; 
   parseWaypoint(waypoint_file);
-
-  // We are loading the landmark file in the planner.
-  string landmark_file = "visits_domain/landmark.txt";
-  parseLandmark(landmark_file);
 }
 
-double minimal_path(string from, string to){
+double minimalPath(string from, string to){
   int from_index = stoi(from.substr(1,2));
   int to_index = stoi(to.substr(1,2));
 
@@ -154,7 +148,7 @@ map<string,double> VisitSolver::callExternalSolver(map<string,double> initialSta
           string from = tmp.substr(0,2);
           string to = tmp.substr(3,2);
 
-          act_cost = minimal_path(from, to);
+          act_cost = minimalPath(from, to);
           cout << endl;
           cout << "Distance from " << from << " to " << to << ": " << act_cost << endl;
         }
@@ -215,60 +209,58 @@ double VisitSolver::calculateExtern(double external, double total_cost){
 }
 
 // Structure to store the edge of the graph
-// Struttura per rappresentare un arco nel grafo
-struct Arco {
-    int nodo1;
-    int nodo2;
-    double peso;
+struct Edge {
+    int source;
+    int destination;
+    double weight;
 };
 
-// Funzione di confronto per l'ordinamento degli archi in base al peso
-bool confrontoArchi(const Arco& arco1, const Arco& arco2) {
-    return arco1.peso < arco2.peso;
+// Function to compare two edges according to their weight
+bool edgeComparison(const Edge& edge1, const Edge& edge2) {
+    return edge1.weight < edge2.weight;
 }
 
-// Funzione per trovare l'insieme di un elemento x utilizzando la tecnica del disjoint-set
-int trovaInsieme(vector<int>& insiemi, int x) {
-    if (insiemi[x] == x)
+// Function to find the set of an element i
+int findSet(vector<int>& set, int x) {
+    if (set[x] == x)
         return x;
-    return trovaInsieme(insiemi, insiemi[x]);
+    return findSet(set, set[x]);
 }
 
-// Funzione per unire due insiemi
-void unisciInsiemi(vector<int>& insiemi, int x, int y) {
-    int radiceX = trovaInsieme(insiemi, x);
-    int radiceY = trovaInsieme(insiemi, y);
-    insiemi[radiceX] = radiceY;
+// Function to do union of two sets x and y (uses union by rank)
+void unionSet(vector<int>& set, int x, int y) {
+    int rootX = findSet(set, x);
+    int rootY = findSet(set, y);
+    set[rootX] = rootY;
 }
 
-// Funzione per il calcolo dell'albero di copertura minimo utilizzando l'algoritmo di Kruskal
-void kruskal(vector<Arco>& archi, int numNodi, int numMaxConnessioni) {
-    // Ordinamento degli archi in base al peso
-    sort(archi.begin(), archi.end(), confrontoArchi);
+// Function to construct MST using Kruskal's algorithm
+void kruskal(vector<Edge>& edges, int numNodes, int numMaxConnection) {
+    // Order edges in increasing order of weight
+    sort(edges.begin(), edges.end(), edgeComparison);
 
-    vector<int> insiemi(numNodi);
-    for (int i = 0; i < numNodi; i++)
-        insiemi[i] = i;
+    vector<int> sets(numNodes);
+    for (int i = 0; i < numNodes; i++)
+        sets[i] = i;
 
-    int archiAggiunti = 0;
-    int indiceArco = 0;
+    int edgesAdded = 0;
+    int indexEdge = 0;
 
-    while (archiAggiunti < numNodi - 1 && indiceArco < archi.size()) {
-        Arco arcoCorrente = archi[indiceArco++];
-        int radiceNodo1 = trovaInsieme(insiemi, arcoCorrente.nodo1);
-        int radiceNodo2 = trovaInsieme(insiemi, arcoCorrente.nodo2);
+    while (edgesAdded < numNodes - 1 && indexEdge < edges.size()) {
+        Edge currentEdge = edges[indexEdge++];
+        int rootSource = findSet(sets, currentEdge.source);
+        int rootDestination = findSet(sets, currentEdge.destination);
 
-        if (radiceNodo1 != radiceNodo2) {
-            //cout << "Arco " << arcoCorrente.nodo1 << " - " << arcoCorrente.nodo2 << " con peso " << arcoCorrente.peso << endl;
-
-            unisciInsiemi(insiemi, radiceNodo1, radiceNodo2);
-            adiajency_matrix[arcoCorrente.nodo1][arcoCorrente.nodo2] = arcoCorrente.peso;
-            adiajency_matrix[arcoCorrente.nodo2][arcoCorrente.nodo1] = arcoCorrente.peso;
-            archiAggiunti++;
+        if (rootSource != rootDestination) {
+            unionSet(sets, rootSource, rootDestination);
+            adiajency_matrix[currentEdge.source][currentEdge.destination] = currentEdge.weight;
+            adiajency_matrix[currentEdge.destination][currentEdge.source] = currentEdge.weight;
+            edgesAdded++;
         }
     }
 }
 
+// Function to find the waypoint forbidden
 bool checkForbiddenWaypoint(double x, double y, const vector<tuple<double, double, double>>& forbiddenWaypoint) {
   for (const auto& coord : forbiddenWaypoint) {
     if (x == get<0>(coord) && y == get<1>(coord)) {
@@ -278,41 +270,22 @@ bool checkForbiddenWaypoint(double x, double y, const vector<tuple<double, doubl
   return false;  // The coordinates are allowed
 }
 
+// Function to round a double to a given number of decimal places
 double roundDecimal(double value, int decimalPlaces) {
   double multiplier = pow(10.0, decimalPlaces);
   return round(value * multiplier) / multiplier;
 }
 
+// Function to compute the distance between two waypoints
 double computeDistance(tuple<double, double, double> wp1, tuple<double, double, double> wp2) {
   double dx = get<0>(wp2) - get<0>(wp1);
   double dy = get<1>(wp2) - get<1>(wp1);
   return sqrt(dx * dx + dy * dy);
 }
 
-// void findMin(double row[], int i) {
-  
-//     int index =0;
-//     double min = row[index];
-//     if (row[index] == 0.0) {
-//       index++;
-//       min = row[index];
-//     }
-//     int minIndex = -1;
-
-//     for (int i = 0; i < 30; ++i) {
-//       if(row[i] != 0.0){
-//         if (row[i] <= min) {
-//             min = row[i];
-//             minIndex = i;
-//         }
-//       }
-//     }
-//     row[minIndex] = 0.0;
-//     matrix_connections[i][minIndex] = min;
-// }
-
+// Function to connect the waypoints in the graph
 void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoints) {
-  int numNodes = 30; // Number of nodes in the graph
+  int numNodes = 30;  // Number of nodes in the graph
   int maxConnections = 4; // Maximum number of connections per node
   
   ofstream outfile("../visits_domain/connections.txt");
@@ -323,17 +296,17 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
 
   int numWaypoints = randomWaypoints.size();
 
-  vector<Arco> archi;
+  vector<Edge> edges;
 
   for (int i=0;i<numWaypoints;i++){
     for (int j=0;j<numWaypoints;j++){
       if (i!=j){
         double distance = computeDistance(randomWaypoints[i], randomWaypoints[j]);
-        archi.push_back({i, j, distance});
+        edges.push_back({i, j, distance});
       }
     }
   }
-  kruskal(archi, numWaypoints, maxConnections);
+  kruskal(edges, numWaypoints, maxConnections);
   for (int i=0;i<numWaypoints;i++){
     outfile << "Waypoint " << i << " is connected to: ";
     for (int j=0;j<numWaypoints;j++){
@@ -347,6 +320,7 @@ void connectWaypoints(const vector<tuple<double, double, double>>& randomWaypoin
   }
 }
 
+// Function to generate random waypoints
 void generateRandomWaypoints()
 {
   random_device rd;
@@ -431,33 +405,6 @@ void VisitSolver::parseWaypoint(string waypoint_file){
       pose3 = (double)atof(line.substr(curr,next-curr).c_str());
 
       waypoint[waypoint_name] = vector<double> {pose1, pose2, pose3};
-    }
-  }
-}
-
-void VisitSolver::parseLandmark(string landmark_file){
-
-  int curr, next;
-  string line;
-  double pose1, pose2, pose3;
-  ifstream parametersFile(landmark_file);
-  if (parametersFile.is_open()){
-    while (getline(parametersFile,line)){
-      curr=line.find("[");
-      string landmark_name = line.substr(0,curr).c_str();
-
-      curr=curr+1;
-      next=line.find(",",curr);
-
-      pose1 = (double)atof(line.substr(curr,next-curr).c_str());
-      curr=next+1; next=line.find(",",curr);
-
-      pose2 = (double)atof(line.substr(curr,next-curr).c_str());
-      curr=next+1; next=line.find("]",curr);
-
-      pose3 = (double)atof(line.substr(curr,next-curr).c_str());
-
-      landmark[landmark_name] = vector<double> {pose1, pose2, pose3};
     }
   }
 }

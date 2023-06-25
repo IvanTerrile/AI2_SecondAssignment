@@ -37,7 +37,7 @@ def plot_connections(waypoints, connections):
     # Disegna i quadrati neri nei quattro angoli
     corners = np.array([[-3, -3], [-3, 2], [2, 2], [2, -3]])
     for corner in corners:
-        plt.fill([corner[0], corner[0]+1, corner[0]+1, corner[0]], [corner[1], corner[1], corner[1]+1, corner[1]+1], color='black')
+        plt.fill([corner[0], corner[0]+1, corner[0]+1, corner[0]], [corner[1], corner[1], corner[1]+1, corner[1]+1], color='grey')
 
     # Dizionario per assegnare un colore univoco a ciascun waypoint
     waypoint_colors = {}
@@ -50,12 +50,13 @@ def plot_connections(waypoints, connections):
             waypoint_colors[waypoint] = plt.cm.get_cmap('tab20')(len(waypoint_colors) % 20)
 
         plt.scatter(x, y, color=waypoint_colors[waypoint], label=f'Waypoint {waypoint}')
+        plt.annotate(str(waypoint), (x, y), textcoords="offset points", xytext=(0,10), ha='center')
         
         for connected_waypoint in connected_waypoints:
             cx, cy = waypoints[connected_waypoint]
             plt.plot([x, cx], [y, cy], color='black')
 
-    plt.legend()
+    # plt.legend()
     plt.show()
 
 waypoints = read_waypoints()

@@ -23,7 +23,7 @@
           (and 
           (visited r1) (taken a1 r1) (taken a2 r2)
           (assignment_at a1 r5) (visited r2)
-               (assignment_at a2 r5)
+          (assignment_at a2 r5)
           )
      )
 
