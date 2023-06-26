@@ -243,6 +243,10 @@ void kruskal(vector<Edge>& edges, int numNodes, int numMaxConnection) {
     for (int i = 0; i < numNodes; i++)
         sets[i] = i;
 
+    vector<int> connections(numNodes);
+    for (int i = 0; i < numNodes; i++)
+        connections[i] = 0;
+
     int edgesAdded = 0;
     int indexEdge = 0;
 
@@ -251,10 +255,12 @@ void kruskal(vector<Edge>& edges, int numNodes, int numMaxConnection) {
         int rootSource = findSet(sets, currentEdge.source);
         int rootDestination = findSet(sets, currentEdge.destination);
 
-        if (rootSource != rootDestination) {
+        if (rootSource != rootDestination && connections[currentEdge.source] < numMaxConnection && connections[currentEdge.destination] < numMaxConnection) {
             unionSet(sets, rootSource, rootDestination);
             adiajency_matrix[currentEdge.source][currentEdge.destination] = currentEdge.weight;
             adiajency_matrix[currentEdge.destination][currentEdge.source] = currentEdge.weight;
+            connections[currentEdge.source]++;
+            connections[currentEdge.destination]++;
             edgesAdded++;
         }
     }
