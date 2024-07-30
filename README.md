@@ -36,4 +36,4 @@ where:
 * **Alessio Mura** - [alemuraa](https://github.com/alemuraa)
 * **Pisano Davide** - [DavidePisano](https://github.com/DavidePisano)
 * **Miriam Anna Ruggero** - [Miryru](https://github.com/Miryru)
-* **Terrile Ivan** - [Ivanterry00](https://github.com/IvanTerrile)
+* **Terrile Ivan** - [IvanTerrile](https://github.com/IvanTerrile)
